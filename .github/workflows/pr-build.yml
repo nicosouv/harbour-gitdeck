@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  SAILFISH_RELEASE: '4.5.0.19'
+  SAILFISH_RELEASE: '4.5.0.18'
 
 jobs:
   build-check:
