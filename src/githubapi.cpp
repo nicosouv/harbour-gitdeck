@@ -150,15 +150,16 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
 {
     setLoading(true);
 
-    QNetworkRequest request(QUrl(assetUrl));
-    request.setRawHeader("Accept", "application/octet-stream");
+    QUrl url(assetUrl);
+    QNetworkRequest req(url);
+    req.setRawHeader("Accept", "application/octet-stream");
 
     if (!m_settings->accessToken().isEmpty()) {
-        request.setRawHeader("Authorization",
+        req.setRawHeader("Authorization",
             QString("Bearer %1").arg(m_settings->accessToken()).toUtf8());
     }
 
-    QNetworkReply *reply = m_networkManager->get(request);
+    QNetworkReply *reply = m_networkManager->get(req);
     reply->setProperty("requestType", "downloadAsset");
     reply->setProperty("fileName", fileName);
 

@@ -6,7 +6,7 @@
 #include <QUrlQuery>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QRandomGenerator>
+#include <QDateTime>
 #include <QDebug>
 
 // These will be defined at compile time via qmake
@@ -43,9 +43,12 @@ QString OAuthManager::generateRandomState()
     QString state;
     const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const int length = 32;
+    const int charsetSize = static_cast<int>(sizeof(charset) - 1);
+
+    qsrand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
 
     for (int i = 0; i < length; i++) {
-        int index = QRandomGenerator::global()->bounded(static_cast<int>(sizeof(charset) - 1));
+        int index = qrand() % charsetSize;
         state.append(charset[index]);
     }
 
