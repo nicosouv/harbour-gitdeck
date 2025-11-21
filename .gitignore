@@ -1,0 +1,32 @@
+# Qt
+*.pro.user
+*.autosave
+*.qmlc
+*.jsc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+Makefile*
+*.o
+*.so
+*.a
+
+# Build directories
+build/
+RPMS/
+SRPMS/
+*.rpm
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.qmake.conf.local
+
+# macOS
+.DS_Store

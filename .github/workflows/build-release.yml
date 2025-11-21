@@ -1,0 +1,180 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  SAILFISH_RELEASE: '4.5.0.19'
+
+jobs:
+  build:
+    name: Build RPM for ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch:
+          - armv7hl
+          - i486
+          - aarch64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="0.1.0-dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Update version in spec file
+        run: |
+          sed -i "s/^Version:.*/Version:    ${{ steps.version.outputs.version }}/" rpm/harbour-gitdeck.spec
+
+      - name: Inject OAuth credentials into qmake.conf
+        run: |
+          sed -i "s/gitdeck_client_id = .*/gitdeck_client_id = ${{ secrets.GITDECK_CLIENT_ID }}/" .qmake.conf
+          sed -i "s/gitdeck_client_secret = .*/gitdeck_client_secret = ${{ secrets.GITDECK_CLIENT_SECRET }}/" .qmake.conf
+
+      - name: Build RPM for Sailfish OS
+        id: build
+        uses: R1tschY/sailfish-build-rpm@v1
+        with:
+          arch: ${{ matrix.arch }}
+          release: ${{ env.SAILFISH_RELEASE }}
+          fix-version: false
+          check: true
+
+      - name: List built packages
+        run: |
+          ls -lh RPMS/
+          echo "Built packages:"
+          find RPMS -name "*.rpm" -type f
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.arch }}
+          path: RPMS/*.rpm
+          if-no-files-found: error
+
+  create-release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-packages
+
+      - name: Organize packages
+        run: |
+          mkdir -p packages
+          find release-packages -name "*.rpm" -not -name "*debuginfo*" -not -name "*debugsource*" -exec cp {} packages/ \;
+          ls -lh packages/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+
+          echo "Current tag: ${{ github.ref }}"
+          echo "Previous tag: $PREVIOUS_TAG"
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "Generating changelog from all commits..."
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Generating changelog from $PREVIOUS_TAG to HEAD..."
+            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          echo "Commits found:"
+          echo "$COMMITS"
+
+          echo "## What's New in v${{ steps.version.outputs.version }}" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          if [ -n "$COMMITS" ]; then
+            echo "$COMMITS" >> RELEASE_NOTES.md
+          else
+            echo "- No new commits found" >> RELEASE_NOTES.md
+          fi
+
+          cat >> RELEASE_NOTES.md << 'EOF'
+
+          ---
+
+          ## Installation Instructions
+
+          Download the RPM file matching your device architecture:
+
+          - **armv7hl**: Jolla 1, Jolla C, Xperia X, Xperia XA2
+          - **aarch64**: Xperia 10 II, Xperia 10 III, Xperia 10 IV, Xperia 10 V
+          - **i486**: Emulator only
+
+          ### Install via command line:
+          ```bash
+          devel-su
+          pkcon install-local harbour-gitdeck-*.rpm
+          ```
+
+          ### Install via file manager:
+          Tap the downloaded RPM file and follow the prompts.
+
+          ---
+
+          ## Core Features
+
+          - 🔐 OAuth 2.0 and Personal Access Token authentication
+          - 🔄 GitHub Actions monitoring with detailed step information
+          - 📦 Release management with asset downloads
+          - 🐛 Issues and Pull Requests management
+          - 📂 Repository browsing (files, commits, branches)
+          - 🎨 Native Sailfish OS Silica UI
+
+          ## Support
+
+          - 🐛 Report issues: https://github.com/${{ github.repository }}/issues
+          - 📖 Documentation: https://github.com/${{ github.repository }}
+
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GitDeck v${{ steps.version.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: packages/*.rpm
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

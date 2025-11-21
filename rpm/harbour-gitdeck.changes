@@ -1,0 +1,7 @@
+* Fri Nov 22 2024 GitDeck <gitdeck@example.com> 0.1.0-1
+- Initial release
+- GitHub Actions monitoring
+- Release asset downloads
+- OAuth + PAT authentication
+- Issues and Pull Requests
+- Repository browsing

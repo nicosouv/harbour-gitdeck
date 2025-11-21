@@ -1,0 +1,48 @@
+name: PR Build Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+env:
+  SAILFISH_RELEASE: '4.5.0.19'
+
+jobs:
+  build-check:
+    name: Build Check - ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - armv7hl
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build RPM for Sailfish OS
+        uses: R1tschY/sailfish-build-rpm@v1
+        env:
+          GITDECK_CLIENT_ID: ${{ secrets.GITDECK_CLIENT_ID }}
+          GITDECK_CLIENT_SECRET: ${{ secrets.GITDECK_CLIENT_SECRET }}
+        with:
+          arch: ${{ matrix.arch }}
+          release: ${{ env.SAILFISH_RELEASE }}
+          fix-version: false
+          check: true
+
+      - name: Check for RPM
+        run: |
+          if [ -f RPMS/*.rpm ]; then
+            echo "Build successful - RPM created"
+            ls -lh RPMS/
+          else
+            echo "Build failed - no RPM found"
+            exit 1
+          fi
