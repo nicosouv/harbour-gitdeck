@@ -42,16 +42,6 @@ Item {
         radius: Theme.paddingMedium
         color: isError ? Theme.rgba("#cf222e", 0.95) : Theme.rgba(Theme.highlightBackgroundColor, 0.95)
 
-        // Subtle shadow effect
-        layer.enabled: true
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: Theme.paddingSmall / 2
-            radius: Theme.paddingMedium
-            samples: 17
-            color: Theme.rgba(Theme.primaryColor, 0.3)
-        }
-
         Label {
             id: toastLabel
             anchors.centerIn: parent

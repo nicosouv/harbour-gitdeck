@@ -105,26 +105,24 @@ Page {
                             visible: avatarImage.status !== Image.Ready
                         }
 
-                        Image {
-                            id: avatarImage
+                        Rectangle {
                             anchors.fill: parent
-                            source: appSettings.avatarUrl || ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            smooth: true
+                            radius: width / 2
+                            clip: true
+                            color: "transparent"
 
-                            layer.enabled: true
-                            layer.effect: OpacityMask {
-                                maskSource: Rectangle {
-                                    width: Theme.iconSizeMedium
-                                    height: Theme.iconSizeMedium
-                                    radius: width / 2
+                            Image {
+                                id: avatarImage
+                                anchors.fill: parent
+                                source: appSettings.avatarUrl || ""
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                smooth: true
+
+                                opacity: status === Image.Ready ? 1.0 : 0.0
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
                                 }
-                            }
-
-                            opacity: status === Image.Ready ? 1.0 : 0.0
-                            Behavior on opacity {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
                             }
                         }
                     }
