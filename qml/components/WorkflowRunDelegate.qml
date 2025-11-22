@@ -1,9 +1,31 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+// WebOS-style workflow run item with smooth animations
 ListItem {
     id: delegate
-    contentHeight: Theme.itemSizeLarge
+    contentHeight: Theme.itemSizeLarge + Theme.paddingMedium
+
+    // Fade-in animation
+    opacity: 0
+    Component.onCompleted: fadeIn.start()
+    NumberAnimation on opacity {
+        id: fadeIn
+        from: 0
+        to: 1
+        duration: 200
+        easing.type: Easing.OutQuad
+    }
+
+    // Subtle background highlight
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.rgba(Theme.highlightBackgroundColor, 0.03)
+        opacity: delegate.highlighted ? 1.0 : 0.0
+        Behavior on opacity {
+            NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
+        }
+    }
 
     Row {
         anchors {
@@ -15,18 +37,37 @@ ListItem {
         }
         spacing: Theme.paddingMedium
 
-        // Status icon
-        Rectangle {
+        // Enhanced status indicator
+        Item {
             width: Theme.iconSizeSmall
             height: Theme.iconSizeSmall
-            radius: width / 2
-            color: getStatusColor(status, conclusion)
             anchors.verticalCenter: parent.verticalCenter
 
-            BusyIndicator {
-                anchors.centerIn: parent
-                running: status === "in_progress" || status === "queued"
-                size: BusyIndicatorSize.ExtraSmall
+            Rectangle {
+                id: statusCircle
+                anchors.fill: parent
+                radius: width / 2
+                color: getStatusColor(status, conclusion)
+
+                // Smooth color transition
+                Behavior on color {
+                    ColorAnimation { duration: 200; easing.type: Easing.OutQuad }
+                }
+
+                // Pulse animation for in-progress
+                SequentialAnimation on scale {
+                    running: status === "in_progress"
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1.0; to: 1.15; duration: 800; easing.type: Easing.InOutQuad }
+                    NumberAnimation { from: 1.15; to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
+                }
+
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    running: status === "in_progress" || status === "queued"
+                    size: BusyIndicatorSize.ExtraSmall
+                    opacity: 0.8
+                }
             }
         }
 
@@ -34,14 +75,27 @@ ListItem {
             width: parent.width - Theme.iconSizeSmall - Theme.paddingMedium
             spacing: Theme.paddingSmall
 
-            Label {
+            // Title with better layout
+            Item {
                 width: parent.width
-                text: name + " #" + runNumber
-                color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-                font.pixelSize: Theme.fontSizeMedium
-                truncationMode: TruncationMode.Fade
+                height: titleLabel.height
+
+                Label {
+                    id: titleLabel
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                    }
+                    text: name + " #" + runNumber
+                    color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeMedium
+                    font.weight: Font.Medium
+                    truncationMode: TruncationMode.Fade
+                    maximumLineCount: 1
+                }
             }
 
+            // Commit message with better truncation
             Label {
                 width: parent.width
                 text: commitMessage
@@ -49,10 +103,13 @@ ListItem {
                 font.pixelSize: Theme.fontSizeExtraSmall
                 maximumLineCount: 1
                 truncationMode: TruncationMode.Fade
+                wrapMode: Text.NoWrap
             }
 
-            Row {
-                spacing: Theme.paddingMedium
+            // Metadata row with better spacing
+            Flow {
+                width: parent.width
+                spacing: Theme.paddingSmall
 
                 Label {
                     text: branch
@@ -64,18 +121,21 @@ ListItem {
                     text: "•"
                     color: Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeExtraSmall
+                    opacity: 0.5
                 }
 
                 Label {
                     text: getStatusText(status, conclusion)
                     color: getStatusColor(status, conclusion)
                     font.pixelSize: Theme.fontSizeExtraSmall
+                    font.weight: Font.Medium
                 }
 
                 Label {
                     text: "•"
                     color: Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeExtraSmall
+                    opacity: 0.5
                 }
 
                 Label {
@@ -85,6 +145,20 @@ ListItem {
                 }
             }
         }
+    }
+
+    // Subtle divider
+    Rectangle {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            leftMargin: Theme.horizontalPageMargin
+            rightMargin: Theme.horizontalPageMargin
+        }
+        height: 1
+        color: Theme.primaryColor
+        opacity: 0.1
     }
 
     function getStatusColor(status, conclusion) {

@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "../components"
 
+// WebOS-style repository page with card-based navigation
 Page {
     id: repoPage
 
@@ -13,6 +15,10 @@ Page {
         anchors.fill: parent
         contentHeight: column.height
 
+        // WebOS-style smooth scrolling
+        flickDeceleration: 1500
+        maximumFlickVelocity: 2500
+
         PullDownMenu {
             MenuItem {
                 text: "Open in browser"
@@ -20,198 +26,145 @@ Page {
             }
             MenuItem {
                 text: "Refresh"
-                onClicked: githubApi.fetchRepository(repositoryOwner, repositoryName)
+                onClicked: {
+                    githubApi.fetchRepository(repositoryOwner, repositoryName)
+                    refreshAnimation.start()
+                }
+            }
+        }
+
+        // Subtle refresh animation
+        SequentialAnimation {
+            id: refreshAnimation
+            NumberAnimation {
+                target: column
+                property: "opacity"
+                to: 0.5
+                duration: 150
+            }
+            NumberAnimation {
+                target: column
+                property: "opacity"
+                to: 1.0
+                duration: 150
             }
         }
 
         Column {
             id: column
             width: parent.width
-            spacing: Theme.paddingMedium
+            spacing: Theme.paddingLarge
 
             PageHeader {
                 title: repositoryName
                 description: repositoryOwner
+
+                // Subtle title animation on load
+                opacity: 0
+                Component.onCompleted: {
+                    opacity = 1
+                }
+                Behavior on opacity {
+                    NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
+                }
             }
 
+            // Description with better styling
+            Item {
+                width: parent.width
+                height: descriptionLabel.height
+                visible: repositoryDescription
+
+                Label {
+                    id: descriptionLabel
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        margins: Theme.horizontalPageMargin
+                    }
+                    text: repositoryDescription
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            // Actions section
             Label {
                 anchors {
                     left: parent.left
-                    right: parent.right
-                    margins: Theme.horizontalPageMargin
+                    leftMargin: Theme.horizontalPageMargin
                 }
-                text: repositoryDescription
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                wrapMode: Text.WordWrap
-                visible: repositoryDescription
-            }
-
-            SectionHeader {
                 text: "Actions"
+                color: Theme.secondaryHighlightColor
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Medium
             }
 
-            BackgroundItem {
+            Column {
                 width: parent.width
-                height: Theme.itemSizeMedium
+                spacing: Theme.paddingSmall
 
-                Row {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingMedium
-
-                    Image {
-                        source: "image://theme/icon-m-play"
-                        width: Theme.iconSizeMedium
-                        height: Theme.iconSizeMedium
-                    }
-
-                    Label {
-                        text: "Workflow Runs"
-                        color: Theme.primaryColor
-                        anchors.verticalCenter: parent.verticalCenter
+                NavCard {
+                    iconSource: "image://theme/icon-m-play"
+                    label: "Workflow Runs"
+                    onClicked: {
+                        pageStack.push(Qt.resolvedUrl("WorkflowRunsPage.qml"), {
+                            repositoryOwner: repositoryOwner,
+                            repositoryName: repositoryName
+                        })
                     }
                 }
 
-                onClicked: {
-                    pageStack.push(Qt.resolvedUrl("WorkflowRunsPage.qml"), {
-                        repositoryOwner: repositoryOwner,
-                        repositoryName: repositoryName
-                    })
-                }
-            }
-
-            BackgroundItem {
-                width: parent.width
-                height: Theme.itemSizeMedium
-
-                Row {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingMedium
-
-                    Image {
-                        source: "image://theme/icon-m-download"
-                        width: Theme.iconSizeMedium
-                        height: Theme.iconSizeMedium
-                    }
-
-                    Label {
-                        text: "Releases"
-                        color: Theme.primaryColor
-                        anchors.verticalCenter: parent.verticalCenter
+                NavCard {
+                    iconSource: "image://theme/icon-m-download"
+                    label: "Releases"
+                    onClicked: {
+                        pageStack.push(Qt.resolvedUrl("ReleasesPage.qml"), {
+                            repositoryOwner: repositoryOwner,
+                            repositoryName: repositoryName
+                        })
                     }
                 }
 
-                onClicked: {
-                    pageStack.push(Qt.resolvedUrl("ReleasesPage.qml"), {
-                        repositoryOwner: repositoryOwner,
-                        repositoryName: repositoryName
-                    })
+                NavCard {
+                    iconSource: "image://theme/icon-m-bug"
+                    label: "Issues"
+                    onClicked: {
+                        pageStack.push(Qt.resolvedUrl("IssuesPage.qml"), {
+                            repositoryOwner: repositoryOwner,
+                            repositoryName: repositoryName
+                        })
+                    }
+                }
+
+                NavCard {
+                    iconSource: "image://theme/icon-m-merge"
+                    label: "Pull Requests"
+                    onClicked: {
+                        pageStack.push(Qt.resolvedUrl("PullRequestsPage.qml"), {
+                            repositoryOwner: repositoryOwner,
+                            repositoryName: repositoryName
+                        })
+                    }
                 }
             }
 
-            BackgroundItem {
-                width: parent.width
-                height: Theme.itemSizeMedium
-
-                Row {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingMedium
-
-                    Image {
-                        source: "image://theme/icon-m-bug"
-                        width: Theme.iconSizeMedium
-                        height: Theme.iconSizeMedium
-                    }
-
-                    Label {
-                        text: "Issues"
-                        color: Theme.primaryColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+            // Code section
+            Label {
+                anchors {
+                    left: parent.left
+                    leftMargin: Theme.horizontalPageMargin
                 }
-
-                onClicked: {
-                    pageStack.push(Qt.resolvedUrl("IssuesPage.qml"), {
-                        repositoryOwner: repositoryOwner,
-                        repositoryName: repositoryName
-                    })
-                }
-            }
-
-            BackgroundItem {
-                width: parent.width
-                height: Theme.itemSizeMedium
-
-                Row {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingMedium
-
-                    Image {
-                        source: "image://theme/icon-m-merge"
-                        width: Theme.iconSizeMedium
-                        height: Theme.iconSizeMedium
-                    }
-
-                    Label {
-                        text: "Pull Requests"
-                        color: Theme.primaryColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                onClicked: {
-                    pageStack.push(Qt.resolvedUrl("PullRequestsPage.qml"), {
-                        repositoryOwner: repositoryOwner,
-                        repositoryName: repositoryName
-                    })
-                }
-            }
-
-            SectionHeader {
                 text: "Code"
+                color: Theme.secondaryHighlightColor
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Medium
             }
 
-            BackgroundItem {
-                width: parent.width
-                height: Theme.itemSizeMedium
-
-                Row {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
-                        verticalCenter: parent.verticalCenter
-                    }
-                    spacing: Theme.paddingMedium
-
-                    Image {
-                        source: "image://theme/icon-m-file-folder"
-                        width: Theme.iconSizeMedium
-                        height: Theme.iconSizeMedium
-                    }
-
-                    Label {
-                        text: "Browse Files"
-                        color: Theme.primaryColor
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
+            NavCard {
+                iconSource: "image://theme/icon-m-file-folder"
+                label: "Browse Files"
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("RepositoryBrowserPage.qml"), {
                         repositoryOwner: repositoryOwner,

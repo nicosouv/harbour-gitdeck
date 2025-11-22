@@ -3,9 +3,30 @@ import Sailfish.Silica 1.0
 
 ListItem {
     id: delegate
-    contentHeight: Theme.itemSizeLarge
+    contentHeight: contentColumn.height + Theme.paddingLarge * 2
+
+    // WebOS-style: smooth reveal animation
+    opacity: 0
+    Component.onCompleted: fadeIn.start()
+
+    NumberAnimation on opacity {
+        id: fadeIn
+        from: 0
+        to: 1
+        duration: 200
+        easing.type: Easing.OutQuad
+    }
+
+    // Highlight animation
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.highlightBackgroundColor
+        opacity: delegate.highlighted ? 0.1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
 
     Column {
+        id: contentColumn
         anchors {
             left: parent.left
             right: parent.right
@@ -15,47 +36,62 @@ ListItem {
         }
         spacing: Theme.paddingSmall
 
-        Row {
+        // Title row with better layout
+        Item {
             width: parent.width
-            spacing: Theme.paddingSmall
+            height: Math.max(titleLabel.height, visibilityLabel.height)
 
             Label {
+                id: titleLabel
+                anchors {
+                    left: parent.left
+                    right: visibilityLabel.left
+                    rightMargin: Theme.paddingSmall
+                }
                 text: name
                 color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
                 font.pixelSize: Theme.fontSizeMedium
-                font.bold: true
+                font.weight: Font.Medium
                 truncationMode: TruncationMode.Fade
-                width: Math.min(implicitWidth, parent.width - visibilityLabel.width - parent.spacing)
+                maximumLineCount: 1
             }
 
             Label {
                 id: visibilityLabel
+                anchors.right: parent.right
                 text: isPrivate ? "🔒" : ""
                 color: Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeSmall
+                visible: isPrivate
             }
         }
 
+        // Description with proper spacing
         Label {
             width: parent.width
             text: description || "No description"
-            color: Theme.secondaryColor
+            color: description ? Theme.secondaryColor : Theme.secondaryHighlightColor
             font.pixelSize: Theme.fontSizeExtraSmall
+            font.italic: !description
             maximumLineCount: 2
             wrapMode: Text.WordWrap
             truncationMode: TruncationMode.Fade
+            opacity: 0.9
         }
 
+        // Metadata row with better spacing
         Row {
+            width: parent.width
             spacing: Theme.paddingLarge
 
+            // Language indicator
             Row {
                 spacing: Theme.paddingSmall
                 visible: language
 
                 Rectangle {
-                    width: Theme.paddingSmall
-                    height: Theme.paddingSmall
+                    width: Theme.paddingSmall * 1.5
+                    height: Theme.paddingSmall * 1.5
                     radius: width / 2
                     color: getLanguageColor(language)
                     anchors.verticalCenter: parent.verticalCenter
@@ -65,23 +101,61 @@ ListItem {
                     text: language
                     color: Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
 
-            Label {
-                text: "⭐ " + stars
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeExtraSmall
+            // Stars
+            Row {
+                spacing: Theme.paddingSmall / 2
                 visible: stars > 0
+
+                Label {
+                    text: "⭐"
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Label {
+                    text: formatNumber(stars)
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
-            Label {
-                text: "🍴 " + forks
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeExtraSmall
+            // Forks
+            Row {
+                spacing: Theme.paddingSmall / 2
                 visible: forks > 0
+
+                Label {
+                    text: "🍴"
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Label {
+                    text: formatNumber(forks)
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
+    }
+
+    // Subtle divider (WebOS-style)
+    Rectangle {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            leftMargin: Theme.horizontalPageMargin
+        }
+        height: 1
+        color: Theme.primaryColor
+        opacity: 0.1
     }
 
     function getLanguageColor(lang) {
@@ -98,8 +172,16 @@ ListItem {
             "PHP": "#4F5D95",
             "Swift": "#ffac45",
             "Kotlin": "#F18E33",
-            "QML": "#44a51c"
+            "QML": "#44a51c",
+            "Shell": "#89e051"
         }
         return colors[lang] || Theme.highlightColor
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + "k"
+        }
+        return num.toString()
     }
 }
