@@ -53,13 +53,7 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Login with GitHub OAuth"
                 preferredWidth: Theme.buttonWidthLarge
-                onClicked: {
-                    var url = oauthManager.getAuthorizationUrl()
-                    if (url) {
-                        Qt.openUrlExternally(url)
-                        pageStack.push(Qt.resolvedUrl("OAuthCallbackPage.qml"))
-                    }
-                }
+                onClicked: oauthManager.startAuthentication()
             }
 
             Label {
@@ -88,12 +82,18 @@ Page {
                     right: parent.right
                     margins: Theme.horizontalPageMargin
                 }
-                text: "Choose your preferred authentication method. OAuth provides the best experience."
+                text: "OAuth opens in your browser and returns automatically. Choose Personal Access Token if OAuth doesn't work."
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
             }
         }
+    }
+
+    BusyIndicator {
+        anchors.centerIn: parent
+        running: oauthManager.isAuthenticating
+        size: BusyIndicatorSize.Large
     }
 }

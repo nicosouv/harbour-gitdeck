@@ -11,7 +11,6 @@ URL:        https://github.com/yourusername/harbour-gitdeck
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires:   sailfishsilica-qt5 >= 1.0.0
-Requires:   amber-web-authorization
 
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)

@@ -10,7 +10,7 @@ To enable OAuth authentication in GitDeck, you need to create a GitHub OAuth App
 4. Fill in the following details:
    - **Application name**: GitDeck (or your preferred name)
    - **Homepage URL**: https://github.com/yourusername/harbour-gitdeck
-   - **Authorization callback URL**: `https://localhost/oauth/callback`
+   - **Authorization callback URL**: `http://localhost:8080/callback`
    - **Application description**: Native GitHub client for Sailfish OS
 
 5. Click "Register application"
@@ -64,12 +64,13 @@ Users can still authenticate using Personal Access Tokens.
 ## OAuth Flow
 
 1. User taps "Login with GitHub OAuth" in the app
-2. Browser opens to GitHub authorization page
-3. User authorizes the app
-4. GitHub redirects to the callback URL with a code
-5. User copies the code back to the app
-6. App exchanges code for access token
-7. User is authenticated!
+2. App starts a local HTTP server on port 8080
+3. Browser opens to GitHub authorization page
+4. User authorizes the app
+5. GitHub redirects to `http://localhost:8080/callback` with the authorization code
+6. Local server receives the code automatically
+7. App exchanges code for access token
+8. User is authenticated - the browser shows a success page!
 
 ## Troubleshooting
 
@@ -78,8 +79,9 @@ Users can still authenticate using Personal Access Tokens.
 - Rebuild the app after setting credentials
 
 **Authorization fails**
-- Verify the callback URL is exactly: `https://localhost/oauth/callback`
+- Verify the callback URL is exactly: `http://localhost:8080/callback`
 - Check that your OAuth app is not suspended
+- Make sure no other app is using port 8080
 
 **Alternative: Use Personal Access Token**
 - Users can always use a GitHub Personal Access Token instead

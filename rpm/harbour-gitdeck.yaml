@@ -30,7 +30,6 @@ PkgConfigBR:
 
 Requires:
   - sailfishsilica-qt5 >= 1.0.0
-  - amber-web-authorization
 
 Builder: qmake5
 
