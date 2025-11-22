@@ -34,6 +34,7 @@ private slots:
     void handleTokenResponse();
 
 private:
+    void setIsAuthenticating(bool authenticating);
     void openAuthorizationUrl();
     bool startLocalServer();
     void stopLocalServer();
