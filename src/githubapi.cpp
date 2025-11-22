@@ -43,6 +43,8 @@ void GitHubAPI::get(const QString &endpoint, const QString &requestType)
 {
     setLoading(true);
     QNetworkRequest request = createRequest(endpoint);
+    qDebug() << "[API] GET request:" << request.url().toString();
+    qDebug() << "[API] Request type:" << requestType;
     QNetworkReply *reply = m_networkManager->get(request);
     reply->setProperty("requestType", requestType);
 
@@ -84,6 +86,11 @@ void GitHubAPI::onRequestFinished()
 
 void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
 {
+    qDebug() << "[API] Response for:" << requestType;
+    qDebug() << "[API] URL:" << reply->url().toString();
+    qDebug() << "[API] Error:" << reply->error();
+    qDebug() << "[API] HTTP Status:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+
     // Handle star/unstar operations (they return 204 No Content on success)
     if (requestType == "starRepository" || requestType == "unstarRepository") {
         if (reply->error() == QNetworkReply::NoError) {
@@ -106,7 +113,8 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
 
     if (reply->error() != QNetworkReply::NoError) {
         QString errorMsg = reply->errorString();
-        qWarning() << "API Error:" << errorMsg;
+        qWarning() << "[API] Error:" << errorMsg;
+        qWarning() << "[API] Error details:" << reply->readAll();
         emit requestError(errorMsg);
         return;
     }
@@ -220,7 +228,10 @@ void GitHubAPI::fetchWorkflowRunDetails(const QString &owner, const QString &rep
 
 void GitHubAPI::fetchWorkflowRunJobs(const QString &owner, const QString &repo, int runId)
 {
-    get(QString("/repos/%1/%2/actions/runs/%3/jobs").arg(owner, repo).arg(runId), "workflowJobs");
+    QString endpoint = QString("/repos/%1/%2/actions/runs/%3/jobs").arg(owner, repo).arg(runId);
+    qDebug() << "[Workflow] Fetching jobs for run:" << runId;
+    qDebug() << "[Workflow] Endpoint:" << endpoint;
+    get(endpoint, "workflowJobs");
 }
 
 // Releases API
@@ -232,6 +243,10 @@ void GitHubAPI::fetchReleases(const QString &owner, const QString &repo)
 void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fileName)
 {
     setLoading(true);
+
+    qDebug() << "[Download] Starting download";
+    qDebug() << "[Download] Asset URL:" << assetUrl;
+    qDebug() << "[Download] File name:" << fileName;
 
     QUrl url(assetUrl);
     QNetworkRequest req(url);
@@ -249,17 +264,31 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
     connect(reply, &QNetworkReply::downloadProgress,
             this, &GitHubAPI::onDownloadProgress);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        qDebug() << "[Download] Finished with error:" << reply->error();
+        qDebug() << "[Download] Error string:" << reply->errorString();
+        qDebug() << "[Download] HTTP status:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "[Download] Final URL:" << reply->url().toString();
+
         if (reply->error() == QNetworkReply::NoError) {
             QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
             QString fileName = reply->property("fileName").toString();
             QString filePath = downloadsPath + "/" + fileName;
 
+            qDebug() << "[Download] Downloads path:" << downloadsPath;
+            qDebug() << "[Download] Full file path:" << filePath;
+
+            QByteArray data = reply->readAll();
+            qDebug() << "[Download] Data size:" << data.size() << "bytes";
+
             QFile file(filePath);
             if (file.open(QIODevice::WriteOnly)) {
-                file.write(reply->readAll());
+                qint64 written = file.write(data);
                 file.close();
+                qDebug() << "[Download] Written:" << written << "bytes";
+                qDebug() << "[Download] File saved successfully";
                 emit assetDownloadCompleted(filePath);
             } else {
+                qDebug() << "[Download] Failed to open file:" << file.errorString();
                 emit requestError("Failed to save file: " + fileName);
             }
         } else {

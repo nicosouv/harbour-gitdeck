@@ -211,6 +211,9 @@ ListItem {
 
                             onClicked: {
                                 var fileName = modelData.name
+                                console.log("[QML] Downloading asset:", fileName)
+                                console.log("[QML] Download URL:", modelData.downloadUrl)
+                                console.log("[QML] Asset object:", JSON.stringify(modelData))
                                 remorse.execute(delegate, "Downloading " + fileName, function() {
                                     githubApi.downloadReleaseAsset(modelData.downloadUrl, fileName)
                                 })
