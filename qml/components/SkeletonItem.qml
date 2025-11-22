@@ -13,11 +13,14 @@ Rectangle {
     // Shimmer effect
     Rectangle {
         id: shimmer
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height
+        anchors.centerIn: parent
         radius: parent.radius
+        rotation: 90
+        transformOrigin: Item.Center
 
         gradient: Gradient {
-            orientation: Gradient.Horizontal
             GradientStop { position: 0.0; color: "transparent" }
             GradientStop { position: 0.5; color: Theme.rgba(Theme.highlightColor, 0.15) }
             GradientStop { position: 1.0; color: "transparent" }
