@@ -49,6 +49,27 @@ void GitHubAPI::get(const QString &endpoint, const QString &requestType)
     connect(reply, &QNetworkReply::finished, this, &GitHubAPI::onRequestFinished);
 }
 
+void GitHubAPI::put(const QString &endpoint, const QString &requestType)
+{
+    setLoading(true);
+    QNetworkRequest request = createRequest(endpoint);
+    request.setHeader(QNetworkRequest::ContentLengthHeader, 0);
+    QNetworkReply *reply = m_networkManager->put(request, QByteArray());
+    reply->setProperty("requestType", requestType);
+
+    connect(reply, &QNetworkReply::finished, this, &GitHubAPI::onRequestFinished);
+}
+
+void GitHubAPI::deleteRequest(const QString &endpoint, const QString &requestType)
+{
+    setLoading(true);
+    QNetworkRequest request = createRequest(endpoint);
+    QNetworkReply *reply = m_networkManager->deleteResource(request);
+    reply->setProperty("requestType", requestType);
+
+    connect(reply, &QNetworkReply::finished, this, &GitHubAPI::onRequestFinished);
+}
+
 void GitHubAPI::onRequestFinished()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
@@ -63,6 +84,26 @@ void GitHubAPI::onRequestFinished()
 
 void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
 {
+    // Handle star/unstar operations (they return 204 No Content on success)
+    if (requestType == "starRepository" || requestType == "unstarRepository") {
+        if (reply->error() == QNetworkReply::NoError) {
+            QString endpoint = reply->url().path();
+            QStringList parts = endpoint.split('/');
+            if (parts.size() >= 4) {
+                QString owner = parts[parts.size() - 2];
+                QString repo = parts[parts.size() - 1];
+                if (requestType == "starRepository") {
+                    emit repositoryStarred(owner, repo);
+                } else {
+                    emit repositoryUnstarred(owner, repo);
+                }
+            }
+        } else {
+            emit requestError(reply->errorString());
+        }
+        return;
+    }
+
     if (reply->error() != QNetworkReply::NoError) {
         QString errorMsg = reply->errorString();
         qWarning() << "API Error:" << errorMsg;
@@ -77,6 +118,10 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         emit currentUserReceived(doc.object());
     } else if (requestType == "repositories") {
         emit repositoriesReceived(doc.array());
+    } else if (requestType == "starredRepositories") {
+        emit starredRepositoriesReceived(doc.array());
+    } else if (requestType == "searchResults") {
+        emit searchResultsReceived(doc.object()["items"].toArray());
     } else if (requestType == "repository") {
         emit repositoryReceived(doc.object());
     } else if (requestType == "workflowRuns") {
@@ -119,10 +164,48 @@ void GitHubAPI::fetchUserRepositories()
     get("/user/repos?sort=updated&per_page=100", "repositories");
 }
 
+void GitHubAPI::fetchStarredRepositories()
+{
+    get("/user/starred?per_page=100", "starredRepositories");
+}
+
 // Repository API
 void GitHubAPI::fetchRepository(const QString &owner, const QString &repo)
 {
     get(QString("/repos/%1/%2").arg(owner, repo), "repository");
+}
+
+void GitHubAPI::searchRepositories(const QString &query)
+{
+    QString encodedQuery = QUrl::toPercentEncoding(query);
+    get(QString("/search/repositories?q=%1&per_page=30").arg(encodedQuery), "searchResults");
+}
+
+void GitHubAPI::starRepository(const QString &owner, const QString &repo)
+{
+    put(QString("/user/starred/%1/%2").arg(owner, repo), "starRepository");
+}
+
+void GitHubAPI::unstarRepository(const QString &owner, const QString &repo)
+{
+    deleteRequest(QString("/user/starred/%1/%2").arg(owner, repo), "unstarRepository");
+}
+
+void GitHubAPI::checkIfStarred(const QString &owner, const QString &repo)
+{
+    QNetworkRequest request = createRequest(QString("/user/starred/%1/%2").arg(owner, repo));
+    QNetworkReply *reply = m_networkManager->get(request);
+    reply->setProperty("requestType", "checkStarred");
+    reply->setProperty("owner", owner);
+    reply->setProperty("repo", repo);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        QString owner = reply->property("owner").toString();
+        QString repo = reply->property("repo").toString();
+        bool isStarred = (reply->error() == QNetworkReply::NoError);
+        emit repositoryStarStatusReceived(isStarred, owner, repo);
+        reply->deleteLater();
+    });
 }
 
 void GitHubAPI::fetchRepositoryWorkflowRuns(const QString &owner, const QString &repo)

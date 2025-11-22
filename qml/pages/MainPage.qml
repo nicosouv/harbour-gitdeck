@@ -21,6 +21,14 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
             }
             MenuItem {
+                text: "Starred"
+                onClicked: pageStack.push(Qt.resolvedUrl("StarsPage.qml"))
+            }
+            MenuItem {
+                text: "Search"
+                onClicked: pageStack.push(Qt.resolvedUrl("SearchPage.qml"))
+            }
+            MenuItem {
                 text: "Refresh"
                 onClicked: {
                     githubApi.fetchUserRepositories()
@@ -149,17 +157,6 @@ Page {
                 height: 1
                 color: Theme.primaryColor
                 opacity: 0.1
-            }
-
-            // Search field with better styling
-            SearchField {
-                width: parent.width
-                placeholderText: "Search repositories"
-                visible: repositoryModel.count > 0
-
-                onTextChanged: {
-                    // TODO: Implement search filtering
-                }
             }
         }
 

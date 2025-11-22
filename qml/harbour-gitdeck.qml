@@ -37,6 +37,8 @@ ApplicationWindow {
         onAssetDownloadCompleted: {
             var fileName = filePath.split("/").pop()
             showNotification("Downloaded: " + fileName)
+            // Open the file (e.g., to install RPM)
+            Qt.openUrlExternally("file://" + filePath)
         }
     }
 

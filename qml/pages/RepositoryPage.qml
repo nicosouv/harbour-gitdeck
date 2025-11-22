@@ -10,6 +10,32 @@ Page {
     property string repositoryOwner
     property string repositoryFullName
     property string repositoryDescription
+    property bool isStarred: false
+
+    Component.onCompleted: {
+        githubApi.checkIfStarred(repositoryOwner, repositoryName)
+    }
+
+    Connections {
+        target: githubApi
+        onRepositoryStarStatusReceived: {
+            if (owner === repositoryOwner && repo === repositoryName) {
+                repoPage.isStarred = isStarred
+            }
+        }
+        onRepositoryStarred: {
+            if (owner === repositoryOwner && repo === repositoryName) {
+                repoPage.isStarred = true
+                appWindow.showNotification("Repository starred")
+            }
+        }
+        onRepositoryUnstarred: {
+            if (owner === repositoryOwner && repo === repositoryName) {
+                repoPage.isStarred = false
+                appWindow.showNotification("Repository unstarred")
+            }
+        }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -23,6 +49,16 @@ Page {
             MenuItem {
                 text: "Open in browser"
                 onClicked: Qt.openUrlExternally("https://github.com/" + repositoryFullName)
+            }
+            MenuItem {
+                text: isStarred ? "Unstar" : "Star"
+                onClicked: {
+                    if (isStarred) {
+                        githubApi.unstarRepository(repositoryOwner, repositoryName)
+                    } else {
+                        githubApi.starRepository(repositoryOwner, repositoryName)
+                    }
+                }
             }
             MenuItem {
                 text: "Refresh"

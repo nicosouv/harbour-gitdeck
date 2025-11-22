@@ -23,9 +23,14 @@ public:
     // User API
     Q_INVOKABLE void fetchCurrentUser();
     Q_INVOKABLE void fetchUserRepositories();
+    Q_INVOKABLE void fetchStarredRepositories();
 
     // Repository API
     Q_INVOKABLE void fetchRepository(const QString &owner, const QString &repo);
+    Q_INVOKABLE void searchRepositories(const QString &query);
+    Q_INVOKABLE void starRepository(const QString &owner, const QString &repo);
+    Q_INVOKABLE void unstarRepository(const QString &owner, const QString &repo);
+    Q_INVOKABLE void checkIfStarred(const QString &owner, const QString &repo);
     Q_INVOKABLE void fetchRepositoryWorkflowRuns(const QString &owner, const QString &repo);
     Q_INVOKABLE void fetchWorkflowRunDetails(const QString &owner, const QString &repo, int runId);
     Q_INVOKABLE void fetchWorkflowRunJobs(const QString &owner, const QString &repo, int runId);
@@ -57,7 +62,12 @@ signals:
     // Response signals
     void currentUserReceived(const QJsonObject &user);
     void repositoriesReceived(const QJsonArray &repos);
+    void starredRepositoriesReceived(const QJsonArray &repos);
     void repositoryReceived(const QJsonObject &repo);
+    void searchResultsReceived(const QJsonArray &repos);
+    void repositoryStarred(const QString &owner, const QString &repo);
+    void repositoryUnstarred(const QString &owner, const QString &repo);
+    void repositoryStarStatusReceived(bool isStarred, const QString &owner, const QString &repo);
     void workflowRunsReceived(const QJsonArray &runs);
     void workflowRunDetailsReceived(const QJsonObject &run);
     void workflowJobsReceived(const QJsonArray &jobs);
@@ -85,6 +95,8 @@ private:
     void setLoading(bool loading);
     QNetworkRequest createRequest(const QString &endpoint);
     void get(const QString &endpoint, const QString &requestType);
+    void put(const QString &endpoint, const QString &requestType);
+    void deleteRequest(const QString &endpoint, const QString &requestType);
     void handleResponse(QNetworkReply *reply, const QString &requestType);
 };
 
