@@ -25,7 +25,15 @@ Page {
             description: repositoryName
         }
 
-        delegate: IssueDelegate {}
+        delegate: IssueDelegate {
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("IssuePage.qml"), {
+                    repositoryOwner: issuesPage.repositoryOwner,
+                    repositoryName: issuesPage.repositoryName,
+                    issueNumber: number
+                })
+            }
+        }
 
         ViewPlaceholder {
             enabled: issueModel.count === 0 && !githubApi.loading

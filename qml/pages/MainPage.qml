@@ -21,6 +21,10 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
             }
             MenuItem {
+                text: "Notifications"
+                onClicked: pageStack.push(Qt.resolvedUrl("NotificationsPage.qml"))
+            }
+            MenuItem {
                 text: "Starred"
                 onClicked: pageStack.push(Qt.resolvedUrl("StarsPage.qml"))
             }

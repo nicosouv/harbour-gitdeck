@@ -97,7 +97,11 @@ Page {
             }
 
             onClicked: {
-                Qt.openUrlExternally("https://github.com/" + repositoryOwner + "/" + repositoryName + "/pull/" + number)
+                pageStack.push(Qt.resolvedUrl("PullRequestPage.qml"), {
+                    repositoryOwner: pullRequestsPage.repositoryOwner,
+                    repositoryName: pullRequestsPage.repositoryName,
+                    prNumber: number
+                })
             }
         }
 

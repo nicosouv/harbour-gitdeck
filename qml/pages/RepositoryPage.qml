@@ -255,6 +255,17 @@ Page {
                     })
                 }
             }
+
+            NavCard {
+                iconSource: "image://theme/icon-m-device-upload"
+                label: "Branches"
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("BranchesPage.qml"), {
+                        repositoryOwner: repositoryOwner,
+                        repositoryName: repositoryName
+                    })
+                }
+            }
         }
 
         VerticalScrollDecorator {}
