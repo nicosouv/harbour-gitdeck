@@ -18,30 +18,8 @@ Page {
             }
         }
 
-        header: Column {
-            width: parent.width
-            spacing: 0
-
-            PageHeader {
-                title: "Starred Repositories"
-
-                // Subtle title animation on load
-                opacity: 0
-                Component.onCompleted: {
-                    opacity = 1
-                }
-                Behavior on opacity {
-                    NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                }
-            }
-
-            // Separator
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: Theme.primaryColor
-                opacity: 0.1
-            }
+        header: PageHeader {
+            title: "Starred Repositories"
         }
 
         delegate: RepositoryDelegate {
@@ -55,34 +33,16 @@ Page {
             }
         }
 
-        // Skeleton loaders while loading
-        Column {
-            anchors {
-                top: parent.top
-                topMargin: Theme.itemSizeHuge  // Below header
-                left: parent.left
-                right: parent.right
-            }
-            visible: githubApi.loading && starredModel.count === 0
-            spacing: 0
-
-            Repeater {
-                model: 5
-                RepositorySkeleton {}
-            }
-        }
-
-        // Empty state
         ViewPlaceholder {
             enabled: starredModel.count === 0 && !githubApi.loading
             text: "No starred repositories"
             hintText: "Star repositories to see them here"
+        }
 
-            // Fade in animation
-            opacity: enabled ? 1.0 : 0.0
-            Behavior on opacity {
-                NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-            }
+        BusyIndicator {
+            anchors.centerIn: parent
+            running: githubApi.loading && starredModel.count === 0
+            size: BusyIndicatorSize.Large
         }
 
         VerticalScrollDecorator {}
