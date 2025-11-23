@@ -32,8 +32,8 @@ public:
     Q_INVOKABLE void unstarRepository(const QString &owner, const QString &repo);
     Q_INVOKABLE void checkIfStarred(const QString &owner, const QString &repo);
     Q_INVOKABLE void fetchRepositoryWorkflowRuns(const QString &owner, const QString &repo);
-    Q_INVOKABLE void fetchWorkflowRunDetails(const QString &owner, const QString &repo, int runId);
-    Q_INVOKABLE void fetchWorkflowRunJobs(const QString &owner, const QString &repo, int runId);
+    Q_INVOKABLE void fetchWorkflowRunDetails(const QString &owner, const QString &repo, qint64 runId);
+    Q_INVOKABLE void fetchWorkflowRunJobs(const QString &owner, const QString &repo, qint64 runId);
 
     // Releases API
     Q_INVOKABLE void fetchReleases(const QString &owner, const QString &repo);

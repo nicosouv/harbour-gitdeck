@@ -226,12 +226,12 @@ void GitHubAPI::fetchRepositoryWorkflowRuns(const QString &owner, const QString 
     get(QString("/repos/%1/%2/actions/runs?per_page=50").arg(owner, repo), "workflowRuns");
 }
 
-void GitHubAPI::fetchWorkflowRunDetails(const QString &owner, const QString &repo, int runId)
+void GitHubAPI::fetchWorkflowRunDetails(const QString &owner, const QString &repo, qint64 runId)
 {
     get(QString("/repos/%1/%2/actions/runs/%3").arg(owner, repo).arg(runId), "workflowRunDetails");
 }
 
-void GitHubAPI::fetchWorkflowRunJobs(const QString &owner, const QString &repo, int runId)
+void GitHubAPI::fetchWorkflowRunJobs(const QString &owner, const QString &repo, qint64 runId)
 {
     QString endpoint = QString("/repos/%1/%2/actions/runs/%3/jobs").arg(owner, repo).arg(runId);
     qDebug() << "[Workflow] Fetching jobs for run:" << runId;

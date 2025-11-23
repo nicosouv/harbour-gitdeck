@@ -20,7 +20,8 @@ QVariant WorkflowRunModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case IdRole:
-        return run["id"].toInt();
+        // GitHub API uses large integers that exceed int32 range, use toDouble or toString
+        return run["id"].toVariant().toLongLong();
     case NameRole:
         return run["name"].toString();
     case HeadBranchRole:
@@ -100,7 +101,7 @@ QVariantMap WorkflowRunModel::get(int index) const
     QVariantMap map;
     if (index >= 0 && index < m_runs.size()) {
         const QJsonObject &run = m_runs.at(index);
-        map["runId"] = run["id"].toInt();
+        map["runId"] = run["id"].toVariant().toLongLong();
         map["name"] = run["name"].toString();
         map["branch"] = run["head_branch"].toString();
         map["status"] = run["status"].toString();
