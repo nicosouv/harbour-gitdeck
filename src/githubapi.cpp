@@ -195,6 +195,20 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         emit pullRequestCommentsReceived(doc.array());
     } else if (requestType == "notifications") {
         emit notificationsReceived(doc.array());
+    } else if (requestType == "contributors") {
+        emit contributorsReceived(doc.array());
+    } else if (requestType == "user") {
+        emit userReceived(doc.object());
+    } else if (requestType == "userFollowers") {
+        emit userFollowersReceived(doc.array());
+    } else if (requestType == "userFollowing") {
+        emit userFollowingReceived(doc.array());
+    } else if (requestType == "userPublicRepos") {
+        emit userPublicReposReceived(doc.array());
+    } else if (requestType == "repositoryLabels") {
+        emit repositoryLabelsReceived(doc.array());
+    } else if (requestType == "repositoryMilestones") {
+        emit repositoryMilestonesReceived(doc.array());
     }
 }
 
@@ -563,4 +577,49 @@ void GitHubAPI::fetchNotifications()
 {
     qDebug() << "[Notifications] Fetching notifications";
     get("/notifications?per_page=50", "notifications");
+}
+
+// Contributors API
+void GitHubAPI::fetchContributors(const QString &owner, const QString &repo)
+{
+    qDebug() << "[Contributors] Fetching contributors for" << owner << "/" << repo;
+    get(QString("/repos/%1/%2/contributors?per_page=100").arg(owner, repo), "contributors");
+}
+
+// User API
+void GitHubAPI::fetchUser(const QString &username)
+{
+    qDebug() << "[User] Fetching user profile for" << username;
+    get(QString("/users/%1").arg(username), "user");
+}
+
+void GitHubAPI::fetchUserFollowers(const QString &username)
+{
+    qDebug() << "[User] Fetching followers for" << username;
+    get(QString("/users/%1/followers?per_page=100").arg(username), "userFollowers");
+}
+
+void GitHubAPI::fetchUserFollowing(const QString &username)
+{
+    qDebug() << "[User] Fetching following for" << username;
+    get(QString("/users/%1/following?per_page=100").arg(username), "userFollowing");
+}
+
+void GitHubAPI::fetchUserPublicRepos(const QString &username)
+{
+    qDebug() << "[User] Fetching public repos for" << username;
+    get(QString("/users/%1/repos?per_page=100&sort=updated").arg(username), "userPublicRepos");
+}
+
+// Labels and Milestones API
+void GitHubAPI::fetchRepositoryLabels(const QString &owner, const QString &repo)
+{
+    qDebug() << "[Labels] Fetching labels for" << owner << "/" << repo;
+    get(QString("/repos/%1/%2/labels?per_page=100").arg(owner, repo), "repositoryLabels");
+}
+
+void GitHubAPI::fetchRepositoryMilestones(const QString &owner, const QString &repo)
+{
+    qDebug() << "[Milestones] Fetching milestones for" << owner << "/" << repo;
+    get(QString("/repos/%1/%2/milestones?per_page=100&state=all").arg(owner, repo), "repositoryMilestones");
 }

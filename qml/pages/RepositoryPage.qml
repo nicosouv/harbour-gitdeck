@@ -284,6 +284,17 @@ Page {
                     })
                 }
             }
+
+            NavCard {
+                iconSource: "image://theme/icon-m-people"
+                label: "Contributors"
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("ContributorsPage.qml"), {
+                        repositoryOwner: repositoryOwner,
+                        repositoryName: repositoryName
+                    })
+                }
+            }
         }
 
         VerticalScrollDecorator {}

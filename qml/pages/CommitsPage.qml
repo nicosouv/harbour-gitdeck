@@ -76,9 +76,11 @@ Page {
             }
 
             onClicked: {
-                if (modelData.html_url) {
-                    Qt.openUrlExternally(modelData.html_url)
-                }
+                pageStack.push(Qt.resolvedUrl("CommitDetailPage.qml"), {
+                    repositoryOwner: repositoryOwner,
+                    repositoryName: repositoryName,
+                    commitSha: modelData.sha
+                })
             }
         }
 

@@ -70,6 +70,19 @@ public:
     // Notifications API
     Q_INVOKABLE void fetchNotifications();
 
+    // Contributors API
+    Q_INVOKABLE void fetchContributors(const QString &owner, const QString &repo);
+
+    // User API
+    Q_INVOKABLE void fetchUser(const QString &username);
+    Q_INVOKABLE void fetchUserFollowers(const QString &username);
+    Q_INVOKABLE void fetchUserFollowing(const QString &username);
+    Q_INVOKABLE void fetchUserPublicRepos(const QString &username);
+
+    // Labels and Milestones API
+    Q_INVOKABLE void fetchRepositoryLabels(const QString &owner, const QString &repo);
+    Q_INVOKABLE void fetchRepositoryMilestones(const QString &owner, const QString &repo);
+
 signals:
     void loadingChanged();
     void requestError(const QString &error);
@@ -105,6 +118,13 @@ signals:
     void issueCommentsReceived(const QJsonArray &comments);
     void pullRequestCommentsReceived(const QJsonArray &comments);
     void notificationsReceived(const QJsonArray &notifications);
+    void contributorsReceived(const QJsonArray &contributors);
+    void userReceived(const QJsonObject &user);
+    void userFollowersReceived(const QJsonArray &followers);
+    void userFollowingReceived(const QJsonArray &following);
+    void userPublicReposReceived(const QJsonArray &repos);
+    void repositoryLabelsReceived(const QJsonArray &labels);
+    void repositoryMilestonesReceived(const QJsonArray &milestones);
 
 private slots:
     void onRequestFinished();
