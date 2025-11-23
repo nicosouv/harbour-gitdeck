@@ -6,7 +6,7 @@ Page {
 
     property string repositoryOwner
     property string repositoryName
-    property int runId
+    property var runId
     property string runName
     property string runStatus
     property string runConclusion

@@ -113,7 +113,7 @@ ListItem {
             font.pixelSize: Theme.fontSizeSmall
             wrapMode: Text.WordWrap
             maximumLineCount: 4
-            truncationMode: TruncationMode.Fade
+            elide: Text.ElideRight
             visible: body
         }
 
