@@ -36,7 +36,7 @@ Page {
         }
 
         delegate: BackgroundItem {
-            height: Theme.itemSizeMedium
+            height: Theme.itemSizeSmall
 
             Row {
                 anchors {
@@ -49,14 +49,14 @@ Page {
 
                 Image {
                     source: model.type === "dir" ? "image://theme/icon-m-file-folder" : "image://theme/icon-m-file-document"
-                    width: Theme.iconSizeMedium
-                    height: Theme.iconSizeMedium
+                    width: Theme.iconSizeSmall
+                    height: Theme.iconSizeSmall
                 }
 
                 Label {
                     text: model.name
                     color: Theme.primaryColor
-                    font.pixelSize: Theme.fontSizeMedium
+                    font.pixelSize: Theme.fontSizeSmall
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -69,7 +69,12 @@ Page {
                         currentPath: model.path
                     })
                 } else {
-                    Qt.openUrlExternally("https://github.com/" + repositoryOwner + "/" + repositoryName + "/blob/main/" + model.path)
+                    pageStack.push(Qt.resolvedUrl("FileViewerPage.qml"), {
+                        repositoryOwner: repositoryOwner,
+                        repositoryName: repositoryName,
+                        filePath: model.path,
+                        fileName: model.name
+                    })
                 }
             }
         }
