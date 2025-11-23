@@ -55,7 +55,6 @@ ListItem {
                 radius: Theme.paddingSmall / 2
                 color: Theme.rgba(Theme.secondaryHighlightColor, 0.2)
                 visible: isPrerelease
-                anchors.verticalCenter: parent.verticalCenter
 
                 Label {
                     id: prereleaseLabel
@@ -74,7 +73,6 @@ ListItem {
                 radius: Theme.paddingSmall / 2
                 color: Theme.rgba(Theme.secondaryColor, 0.2)
                 visible: isDraft
-                anchors.verticalCenter: parent.verticalCenter
 
                 Label {
                     id: draftLabel

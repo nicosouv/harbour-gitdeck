@@ -47,7 +47,8 @@ QVariant ReleaseModel::data(const QModelIndex &index, int role) const
             QVariantMap assetMap;
             assetMap["name"] = assetObj["name"].toString();
             assetMap["size"] = assetObj["size"].toInt();
-            assetMap["downloadUrl"] = assetObj["browser_download_url"].toString();
+            // Use API URL instead of browser_download_url for proper authentication and redirects
+            assetMap["downloadUrl"] = assetObj["url"].toString();
             assetMap["contentType"] = assetObj["content_type"].toString();
             assetMap["downloadCount"] = assetObj["download_count"].toInt();
             assets.append(assetMap);
