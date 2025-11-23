@@ -291,6 +291,45 @@ void GitHubAPI::downloadWorkflowArtifact(const QString &owner, const QString &re
 
     connect(reply, &QNetworkReply::downloadProgress, this, &GitHubAPI::onDownloadProgress);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "[Workflow] Download finished, status:" << statusCode;
+
+        // Handle redirect manually for Qt 5.6 compatibility
+        if (statusCode == 302 || statusCode == 301) {
+            QUrl redirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+            qDebug() << "[Workflow] Following redirect to:" << redirectUrl.toString();
+
+            QString fileName = reply->property("fileName").toString();
+            reply->deleteLater();
+
+            QNetworkRequest redirectReq(redirectUrl);
+            QNetworkReply *redirectReply = m_networkManager->get(redirectReq);
+            redirectReply->setProperty("fileName", fileName);
+
+            connect(redirectReply, &QNetworkReply::finished, this, [this, redirectReply]() {
+                if (redirectReply->error() == QNetworkReply::NoError) {
+                    QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+                    QString fileName = redirectReply->property("fileName").toString();
+                    QString filePath = downloadsPath + "/" + fileName;
+
+                    QFile file(filePath);
+                    if (file.open(QIODevice::WriteOnly)) {
+                        file.write(redirectReply->readAll());
+                        file.close();
+                        qDebug() << "[Workflow] Artifact downloaded:" << filePath;
+                        emit assetDownloadCompleted(filePath);
+                    } else {
+                        emit requestError("Failed to save artifact: " + fileName);
+                    }
+                } else {
+                    emit requestError("Artifact download failed: " + redirectReply->errorString());
+                }
+                redirectReply->deleteLater();
+                setLoading(false);
+            });
+            return;
+        }
+
         if (reply->error() == QNetworkReply::NoError) {
             QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
             QString fileName = reply->property("fileName").toString();
@@ -356,10 +395,55 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
     connect(reply, &QNetworkReply::downloadProgress,
             this, &GitHubAPI::onDownloadProgress);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         qDebug() << "[Download] Finished with error:" << reply->error();
         qDebug() << "[Download] Error string:" << reply->errorString();
-        qDebug() << "[Download] HTTP status:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "[Download] HTTP status:" << statusCode;
         qDebug() << "[Download] Final URL:" << reply->url().toString();
+
+        // Handle redirect manually for Qt 5.6 compatibility
+        if (statusCode == 302 || statusCode == 301) {
+            QUrl redirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+            qDebug() << "[Download] Following redirect to:" << redirectUrl.toString();
+
+            QString fileName = reply->property("fileName").toString();
+            reply->deleteLater();
+
+            // Follow the redirect without authentication headers
+            QNetworkRequest redirectReq(redirectUrl);
+            QNetworkReply *redirectReply = m_networkManager->get(redirectReq);
+            redirectReply->setProperty("fileName", fileName);
+
+            connect(redirectReply, &QNetworkReply::finished, this, [this, redirectReply]() {
+                qDebug() << "[Download] Redirect finished with error:" << redirectReply->error();
+                qDebug() << "[Download] Redirect HTTP status:" << redirectReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+
+                if (redirectReply->error() == QNetworkReply::NoError) {
+                    QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+                    QString fileName = redirectReply->property("fileName").toString();
+                    QString filePath = downloadsPath + "/" + fileName;
+
+                    QByteArray data = redirectReply->readAll();
+                    qDebug() << "[Download] Downloaded:" << data.size() << "bytes";
+
+                    QFile file(filePath);
+                    if (file.open(QIODevice::WriteOnly)) {
+                        qint64 written = file.write(data);
+                        file.close();
+                        qDebug() << "[Download] File saved successfully";
+                        emit assetDownloadCompleted(filePath);
+                    } else {
+                        qDebug() << "[Download] Failed to open file:" << file.errorString();
+                        emit requestError("Failed to save file: " + fileName);
+                    }
+                } else {
+                    emit requestError("Download failed: " + redirectReply->errorString());
+                }
+                redirectReply->deleteLater();
+                setLoading(false);
+            });
+            return;
+        }
 
         if (reply->error() == QNetworkReply::NoError) {
             QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
