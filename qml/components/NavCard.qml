@@ -1,7 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-// WebOS-style navigation card
 BackgroundItem {
     id: navCard
     width: parent.width
@@ -11,12 +10,9 @@ BackgroundItem {
     property string label
     property int animationDelay: 0
 
-    // Fade-in animation with delay
-    opacity: 0
-    Component.onCompleted: fadeIn.start()
     NumberAnimation on opacity {
         id: fadeIn
-        from: 0
+        from: 1
         to: 1
         duration: 200
         easing.type: Easing.OutQuad

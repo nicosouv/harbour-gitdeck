@@ -50,6 +50,7 @@ public:
     // Repository Content API
     Q_INVOKABLE void fetchRepositoryContents(const QString &owner, const QString &repo, const QString &path = "");
     Q_INVOKABLE void fetchFileContent(const QString &owner, const QString &repo, const QString &path);
+    Q_INVOKABLE void fetchReadme(const QString &owner, const QString &repo);
 
     // Commits API
     Q_INVOKABLE void fetchCommits(const QString &owner, const QString &repo, const QString &branch = "");
@@ -80,6 +81,7 @@ signals:
     void pullRequestReceived(const QJsonObject &pr);
     void repositoryContentsReceived(const QJsonArray &contents);
     void fileContentReceived(const QJsonObject &file);
+    void readmeReceived(const QString &content);
     void commitsReceived(const QJsonArray &commits);
     void commitReceived(const QJsonObject &commit);
 

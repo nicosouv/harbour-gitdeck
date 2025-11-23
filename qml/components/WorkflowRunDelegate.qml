@@ -1,21 +1,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-// WebOS-style workflow run item with smooth animations
 ListItem {
     id: delegate
     contentHeight: Theme.itemSizeLarge + Theme.paddingMedium
-
-    // Fade-in animation
-    opacity: 0
-    Component.onCompleted: fadeIn.start()
-    NumberAnimation on opacity {
-        id: fadeIn
-        from: 0
-        to: 1
-        duration: 200
-        easing.type: Easing.OutQuad
-    }
 
     // Subtle background highlight
     Rectangle {

@@ -5,18 +5,6 @@ ListItem {
     id: delegate
     contentHeight: contentColumn.height + Theme.paddingLarge * 2
 
-    // WebOS-style: smooth reveal animation
-    opacity: 0
-    Component.onCompleted: fadeIn.start()
-
-    NumberAnimation on opacity {
-        id: fadeIn
-        from: 0
-        to: 1
-        duration: 200
-        easing.type: Easing.OutQuad
-    }
-
     // Highlight animation
     Rectangle {
         anchors.fill: parent

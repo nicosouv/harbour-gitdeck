@@ -154,6 +154,11 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         } else {
             emit fileContentReceived(doc.object());
         }
+    } else if (requestType == "readme") {
+        QJsonObject obj = doc.object();
+        QString content = QByteArray::fromBase64(obj["content"].toString().toUtf8());
+        qDebug() << "[README] Received README, size:" << content.size();
+        emit readmeReceived(content);
     } else if (requestType == "commits") {
         emit commitsReceived(doc.array());
     } else if (requestType == "commit") {
@@ -339,6 +344,12 @@ void GitHubAPI::fetchRepositoryContents(const QString &owner, const QString &rep
 void GitHubAPI::fetchFileContent(const QString &owner, const QString &repo, const QString &path)
 {
     get(QString("/repos/%1/%2/contents/%3").arg(owner, repo, path), "contents");
+}
+
+void GitHubAPI::fetchReadme(const QString &owner, const QString &repo)
+{
+    qDebug() << "[README] Fetching README for" << owner << "/" << repo;
+    get(QString("/repos/%1/%2/readme").arg(owner, repo), "readme");
 }
 
 // Commits API

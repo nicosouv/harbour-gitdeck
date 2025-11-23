@@ -1,24 +1,12 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-// WebOS-style release item with card-like design
 ListItem {
     id: delegate
     contentHeight: column.height + Theme.paddingLarge * 2
 
     property string repositoryOwner
     property string repositoryName
-
-    // Fade-in animation
-    opacity: 0
-    Component.onCompleted: fadeIn.start()
-    NumberAnimation on opacity {
-        id: fadeIn
-        from: 0
-        to: 1
-        duration: 200
-        easing.type: Easing.OutQuad
-    }
 
     // Card-like background
     Rectangle {

@@ -11,9 +11,11 @@ Page {
     property string repositoryFullName
     property string repositoryDescription
     property bool isStarred: false
+    property string readmeContent: ""
 
     Component.onCompleted: {
         githubApi.checkIfStarred(repositoryOwner, repositoryName)
+        githubApi.fetchReadme(repositoryOwner, repositoryName)
     }
 
     Connections {
@@ -34,6 +36,9 @@ Page {
                 repoPage.isStarred = false
                 appWindow.showNotification("Repository unstarred")
             }
+        }
+        onReadmeReceived: {
+            readmeContent = content
         }
     }
 
@@ -125,6 +130,48 @@ Page {
                 }
             }
 
+            // README section
+            Column {
+                width: parent.width
+                spacing: Theme.paddingSmall
+                visible: readmeContent.length > 0
+
+                Label {
+                    anchors {
+                        left: parent.left
+                        leftMargin: Theme.horizontalPageMargin
+                    }
+                    text: "README"
+                    color: Theme.secondaryHighlightColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                }
+
+                Rectangle {
+                    width: parent.width - Theme.horizontalPageMargin * 2
+                    height: readmeText.height + Theme.paddingLarge * 2
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: Theme.rgba(Theme.highlightBackgroundColor, 0.05)
+                    radius: Theme.paddingSmall
+
+                    Label {
+                        id: readmeText
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                            margins: Theme.paddingLarge
+                        }
+                        text: readmeContent
+                        color: Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        font.family: "Monospace"
+                        wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
+                    }
+                }
+            }
+
             // Actions section
             Label {
                 anchors {
@@ -164,7 +211,7 @@ Page {
                 }
 
                 NavCard {
-                    iconSource: "image://theme/icon-m-bug"
+                    iconSource: "image://theme/icon-m-note"
                     label: "Issues"
                     onClicked: {
                         pageStack.push(Qt.resolvedUrl("IssuesPage.qml"), {
@@ -175,7 +222,7 @@ Page {
                 }
 
                 NavCard {
-                    iconSource: "image://theme/icon-m-merge"
+                    iconSource: "image://theme/icon-m-share"
                     label: "Pull Requests"
                     onClicked: {
                         pageStack.push(Qt.resolvedUrl("PullRequestsPage.qml"), {
