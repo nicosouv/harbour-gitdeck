@@ -12,6 +12,7 @@ Page {
     property string repositoryDescription
     property bool isStarred: false
     property string readmeContent: ""
+    property bool readmeExpanded: false
 
     Component.onCompleted: {
         githubApi.checkIfStarred(repositoryOwner, repositoryName)
@@ -136,15 +137,34 @@ Page {
                 spacing: Theme.paddingSmall
                 visible: readmeContent.length > 0
 
-                Label {
-                    anchors {
-                        left: parent.left
-                        leftMargin: Theme.horizontalPageMargin
+                BackgroundItem {
+                    width: parent.width
+                    height: Theme.itemSizeSmall
+                    onClicked: readmeExpanded = !readmeExpanded
+
+                    Row {
+                        anchors {
+                            left: parent.left
+                            leftMargin: Theme.horizontalPageMargin
+                            verticalCenter: parent.verticalCenter
+                        }
+                        spacing: Theme.paddingSmall
+
+                        Image {
+                            source: readmeExpanded ? "image://theme/icon-s-down" : "image://theme/icon-s-right"
+                            width: Theme.iconSizeSmall
+                            height: Theme.iconSizeSmall
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Label {
+                            text: "README"
+                            color: Theme.highlightColor
+                            font.pixelSize: Theme.fontSizeMedium
+                            font.weight: Font.Medium
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
-                    text: "README"
-                    color: Theme.secondaryHighlightColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
                 }
 
                 Rectangle {
@@ -153,6 +173,7 @@ Page {
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: Theme.rgba(Theme.highlightBackgroundColor, 0.05)
                     radius: Theme.paddingSmall
+                    visible: readmeExpanded || getPreviewLines(readmeContent).length > 0
 
                     Label {
                         id: readmeText
@@ -162,12 +183,24 @@ Page {
                             top: parent.top
                             margins: Theme.paddingLarge
                         }
-                        text: readmeContent
+                        text: readmeExpanded ? formatMarkdown(readmeContent) : formatMarkdown(getPreviewLines(readmeContent))
                         color: Theme.primaryColor
-                        font.pixelSize: Theme.fontSizeExtraSmall
-                        font.family: "Monospace"
+                        font.pixelSize: Theme.fontSizeSmall
                         wrapMode: Text.Wrap
-                        textFormat: Text.PlainText
+                        textFormat: Text.StyledText
+                    }
+                }
+
+                Label {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: readmeExpanded ? "Show less" : "Show more"
+                    color: Theme.secondaryHighlightColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    visible: !readmeExpanded && readmeContent.split('\n').length > 6
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: readmeExpanded = true
                     }
                 }
             }
@@ -269,5 +302,45 @@ Page {
         }
 
         VerticalScrollDecorator {}
+    }
+
+    function getPreviewLines(content) {
+        if (!content) return ""
+        var lines = content.split('\n')
+        return lines.slice(0, 6).join('\n')
+    }
+
+    function formatMarkdown(markdown) {
+        if (!markdown) return ""
+
+        var html = markdown
+
+        // Headers
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>')
+
+        // Bold
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        html = html.replace(/__([^_]+)__/g, '<b>$1</b>')
+
+        // Italic
+        html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>')
+        html = html.replace(/_([^_]+)_/g, '<i>$1</i>')
+
+        // Code blocks (inline)
+        html = html.replace(/`([^`]+)`/g, '<font face="monospace" style="background-color: rgba(128,128,128,0.2);">$1</font>')
+
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+
+        // Lists
+        html = html.replace(/^\* (.+)$/gim, '• $1')
+        html = html.replace(/^- (.+)$/gim, '• $1')
+
+        // Line breaks
+        html = html.replace(/\n/g, '<br>')
+
+        return html
     }
 }
