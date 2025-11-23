@@ -173,21 +173,11 @@ Page {
             }
         }
 
-        // Skeleton loaders while loading
-        Column {
-            anchors {
-                top: parent.top
-                topMargin: Theme.itemSizeHuge * 2  // Below header
-                left: parent.left
-                right: parent.right
-            }
-            visible: githubApi.loading && repositoryModel.count === 0
-            spacing: 0
-
-            Repeater {
-                model: 5
-                RepositorySkeleton {}
-            }
+        // Loading indicator
+        BusyIndicator {
+            anchors.centerIn: parent
+            running: githubApi.loading && repositoryModel.count === 0
+            size: BusyIndicatorSize.Large
         }
 
         // Empty state with better design
