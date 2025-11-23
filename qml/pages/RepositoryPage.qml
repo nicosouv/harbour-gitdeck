@@ -173,7 +173,6 @@ Page {
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: Theme.rgba(Theme.highlightBackgroundColor, 0.05)
                     radius: Theme.paddingSmall
-                    visible: readmeExpanded || getPreviewLines(readmeContent).length > 0
 
                     Label {
                         id: readmeText
@@ -191,16 +190,17 @@ Page {
                     }
                 }
 
-                Label {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: readmeExpanded ? "Show less" : "Show more"
-                    color: Theme.secondaryHighlightColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    visible: !readmeExpanded && readmeContent.split('\n').length > 6
+                BackgroundItem {
+                    width: parent.width
+                    height: Theme.itemSizeSmall
+                    visible: readmeContent.split('\n').length > 6
+                    onClicked: readmeExpanded = !readmeExpanded
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: readmeExpanded = true
+                    Label {
+                        anchors.centerIn: parent
+                        text: readmeExpanded ? "Show less" : "Show more"
+                        color: Theme.secondaryHighlightColor
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                 }
             }
@@ -315,32 +315,54 @@ Page {
 
         var html = markdown
 
-        // Headers
-        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Escape HTML special chars first
+        html = html.replace(/&/g, '&amp;')
+        html = html.replace(/</g, '&lt;')
+        html = html.replace(/>/g, '&gt;')
 
-        // Bold
-        html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
-        html = html.replace(/__([^_]+)__/g, '<b>$1</b>')
+        // Code blocks (inline) - do before other formatting
+        html = html.replace(/`([^`]+)`/g, '<tt>$1</tt>')
+
+        // Bold (do before italic to handle ** before *)
+        html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+        html = html.replace(/__(.+?)__/g, '<b>$1</b>')
 
         // Italic
-        html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>')
-        html = html.replace(/_([^_]+)_/g, '<i>$1</i>')
-
-        // Code blocks (inline)
-        html = html.replace(/`([^`]+)`/g, '<font face="monospace" style="background-color: rgba(128,128,128,0.2);">$1</font>')
+        html = html.replace(/\*(.+?)\*/g, '<i>$1</i>')
+        html = html.replace(/_(.+?)_/g, '<i>$1</i>')
 
         // Links
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
-        // Lists
-        html = html.replace(/^\* (.+)$/gim, '• $1')
-        html = html.replace(/^- (.+)$/gim, '• $1')
+        // Process line by line for headers and lists
+        var lines = html.split('\n')
+        var result = []
 
-        // Line breaks
-        html = html.replace(/\n/g, '<br>')
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i]
 
-        return html
+            // Headers
+            if (line.match(/^### /)) {
+                line = '<font size="+1"><b>' + line.substring(4) + '</b></font>'
+            } else if (line.match(/^## /)) {
+                line = '<font size="+2"><b>' + line.substring(3) + '</b></font>'
+            } else if (line.match(/^# /)) {
+                line = '<font size="+3"><b>' + line.substring(2) + '</b></font>'
+            }
+            // Lists
+            else if (line.match(/^\* /)) {
+                line = '• ' + line.substring(2)
+            } else if (line.match(/^- /)) {
+                line = '• ' + line.substring(2)
+            }
+            // Numbered lists
+            else if (line.match(/^\d+\. /)) {
+                line = line.replace(/^(\d+)\. /, '$1. ')
+            }
+
+            result.push(line)
+        }
+
+        return result.join('<br>')
     }
 }
