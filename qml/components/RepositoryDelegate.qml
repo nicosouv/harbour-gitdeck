@@ -133,7 +133,6 @@ ListItem {
         }
     }
 
-    // Subtle divider (WebOS-style)
     Rectangle {
         anchors {
             left: parent.left

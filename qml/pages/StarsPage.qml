@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import QtGraphicalEffects 1.0
 import "../components"
 
 Page {
@@ -11,34 +10,11 @@ Page {
         anchors.fill: parent
         model: starredModel
 
-        // WebOS-style: smooth scrolling
-        flickDeceleration: 1500
-        maximumFlickVelocity: 2500
 
         PullDownMenu {
             MenuItem {
                 text: "Refresh"
-                onClicked: {
-                    githubApi.fetchStarredRepositories()
-                    refreshAnimation.start()
-                }
-            }
-        }
-
-        // Subtle refresh animation
-        SequentialAnimation {
-            id: refreshAnimation
-            NumberAnimation {
-                target: listView
-                property: "opacity"
-                to: 0.5
-                duration: 150
-            }
-            NumberAnimation {
-                target: listView
-                property: "opacity"
-                to: 1.0
-                duration: 150
+                onClicked: githubApi.fetchStarredRepositories()
             }
         }
 

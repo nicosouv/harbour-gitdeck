@@ -2,7 +2,6 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import "../components"
 
-// WebOS-style repository page with card-based navigation
 Page {
     id: repoPage
 
@@ -46,10 +45,6 @@ Page {
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height
-
-        // WebOS-style smooth scrolling
-        flickDeceleration: 1500
-        maximumFlickVelocity: 2500
 
         PullDownMenu {
             MenuItem {
@@ -100,18 +95,8 @@ Page {
             PageHeader {
                 title: repositoryName
                 description: repositoryOwner
-
-                // Subtle title animation on load
-                opacity: 0
-                Component.onCompleted: {
-                    opacity = 1
-                }
-                Behavior on opacity {
-                    NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                }
             }
 
-            // Description with better styling
             Item {
                 width: parent.width
                 height: descriptionLabel.height

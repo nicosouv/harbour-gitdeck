@@ -10,9 +10,6 @@ Page {
         anchors.fill: parent
         model: searchResultsModel
 
-        // WebOS-style smooth scrolling
-        flickDeceleration: 1500
-        maximumFlickVelocity: 2500
 
         header: Column {
             width: parent.width
