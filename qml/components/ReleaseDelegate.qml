@@ -58,7 +58,8 @@ ListItem {
 
                 Label {
                     id: prereleaseLabel
-                    anchors.centerIn: parent
+                    x: Theme.paddingMedium / 2
+                    y: Theme.paddingSmall / 4
                     text: "Pre-release"
                     color: Theme.secondaryHighlightColor
                     font.pixelSize: Theme.fontSizeExtraSmall
@@ -76,7 +77,8 @@ ListItem {
 
                 Label {
                     id: draftLabel
-                    anchors.centerIn: parent
+                    x: Theme.paddingMedium / 2
+                    y: Theme.paddingSmall / 4
                     text: "Draft"
                     color: Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeExtraSmall

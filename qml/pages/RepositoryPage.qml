@@ -200,7 +200,7 @@ Page {
                 }
 
                 NavCard {
-                    iconSource: "image://theme/icon-m-download"
+                    iconSource: "image://theme/icon-m-cloud-download"
                     label: "Releases"
                     onClicked: {
                         pageStack.push(Qt.resolvedUrl("ReleasesPage.qml"), {

@@ -55,8 +55,8 @@ ApplicationWindow {
     Connections {
         target: githubApi
         onCurrentUserReceived: {
-            appSettings.setUsername(user.login)
-            appSettings.setAvatarUrl(user.avatar_url)
+            appSettings.username = user.login
+            appSettings.avatarUrl = user.avatar_url
         }
     }
 
