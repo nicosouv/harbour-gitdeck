@@ -7,6 +7,7 @@ ListItem {
 
     property string repositoryOwner
     property string repositoryName
+    property bool bodyExpanded: false
 
     // Card-like background
     Rectangle {
@@ -105,16 +106,33 @@ ListItem {
             font.pixelSize: Theme.fontSizeExtraSmall
         }
 
-        // Release body/description
-        Label {
+        // Release body/description with toggle
+        Column {
             width: parent.width
-            text: body
-            color: Theme.secondaryColor
-            font.pixelSize: Theme.fontSizeSmall
-            wrapMode: Text.WordWrap
-            maximumLineCount: 4
-            elide: Text.ElideRight
+            spacing: Theme.paddingSmall
             visible: body
+
+            Label {
+                width: parent.width
+                text: body
+                color: Theme.secondaryColor
+                font.pixelSize: Theme.fontSizeSmall
+                wrapMode: Text.WordWrap
+                maximumLineCount: bodyExpanded ? 0 : 4
+                elide: bodyExpanded ? Text.ElideNone : Text.ElideRight
+            }
+
+            Label {
+                text: bodyExpanded ? "Show less" : "Show more"
+                color: Theme.secondaryHighlightColor
+                font.pixelSize: Theme.fontSizeExtraSmall
+                visible: body && body.split('\n').length > 4
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: bodyExpanded = !bodyExpanded
+                }
+            }
         }
 
         // Assets section with better styling
