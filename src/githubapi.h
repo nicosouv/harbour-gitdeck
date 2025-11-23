@@ -34,6 +34,10 @@ public:
     Q_INVOKABLE void fetchRepositoryWorkflowRuns(const QString &owner, const QString &repo);
     Q_INVOKABLE void fetchWorkflowRunDetails(const QString &owner, const QString &repo, qint64 runId);
     Q_INVOKABLE void fetchWorkflowRunJobs(const QString &owner, const QString &repo, qint64 runId);
+    Q_INVOKABLE void fetchWorkflowRunArtifacts(const QString &owner, const QString &repo, qint64 runId);
+    Q_INVOKABLE void downloadWorkflowArtifact(const QString &owner, const QString &repo, qint64 artifactId, const QString &fileName);
+    Q_INVOKABLE void rerunWorkflow(const QString &owner, const QString &repo, qint64 runId);
+    Q_INVOKABLE void cancelWorkflow(const QString &owner, const QString &repo, qint64 runId);
 
     // Releases API
     Q_INVOKABLE void fetchReleases(const QString &owner, const QString &repo);
@@ -56,6 +60,16 @@ public:
     Q_INVOKABLE void fetchCommits(const QString &owner, const QString &repo, const QString &branch = "");
     Q_INVOKABLE void fetchCommit(const QString &owner, const QString &repo, const QString &sha);
 
+    // Branches API
+    Q_INVOKABLE void fetchBranches(const QString &owner, const QString &repo);
+
+    // Comments API
+    Q_INVOKABLE void fetchIssueComments(const QString &owner, const QString &repo, int issueNumber);
+    Q_INVOKABLE void fetchPullRequestComments(const QString &owner, const QString &repo, int prNumber);
+
+    // Notifications API
+    Q_INVOKABLE void fetchNotifications();
+
 signals:
     void loadingChanged();
     void requestError(const QString &error);
@@ -72,6 +86,9 @@ signals:
     void workflowRunsReceived(const QJsonArray &runs);
     void workflowRunDetailsReceived(const QJsonObject &run);
     void workflowJobsReceived(const QJsonArray &jobs);
+    void workflowArtifactsReceived(const QJsonArray &artifacts);
+    void workflowRerun(qint64 runId);
+    void workflowCancelled(qint64 runId);
     void releasesReceived(const QJsonArray &releases);
     void assetDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void assetDownloadCompleted(const QString &filePath);
@@ -84,6 +101,10 @@ signals:
     void readmeReceived(const QString &content);
     void commitsReceived(const QJsonArray &commits);
     void commitReceived(const QJsonObject &commit);
+    void branchesReceived(const QJsonArray &branches);
+    void issueCommentsReceived(const QJsonArray &comments);
+    void pullRequestCommentsReceived(const QJsonArray &comments);
+    void notificationsReceived(const QJsonArray &notifications);
 
 private slots:
     void onRequestFinished();
@@ -97,6 +118,7 @@ private:
     void setLoading(bool loading);
     QNetworkRequest createRequest(const QString &endpoint);
     void get(const QString &endpoint, const QString &requestType);
+    void post(const QString &endpoint, const QString &requestType, const QByteArray &data = QByteArray());
     void put(const QString &endpoint, const QString &requestType);
     void deleteRequest(const QString &endpoint, const QString &requestType);
     void handleResponse(QNetworkReply *reply, const QString &requestType);

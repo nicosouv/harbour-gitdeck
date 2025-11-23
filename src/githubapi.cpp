@@ -51,6 +51,21 @@ void GitHubAPI::get(const QString &endpoint, const QString &requestType)
     connect(reply, &QNetworkReply::finished, this, &GitHubAPI::onRequestFinished);
 }
 
+void GitHubAPI::post(const QString &endpoint, const QString &requestType, const QByteArray &data)
+{
+    setLoading(true);
+    QNetworkRequest request = createRequest(endpoint);
+    if (!data.isEmpty()) {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    }
+    qDebug() << "[API] POST request:" << request.url().toString();
+    qDebug() << "[API] Request type:" << requestType;
+    QNetworkReply *reply = m_networkManager->post(request, data);
+    reply->setProperty("requestType", requestType);
+
+    connect(reply, &QNetworkReply::finished, this, &GitHubAPI::onRequestFinished);
+}
+
 void GitHubAPI::put(const QString &endpoint, const QString &requestType)
 {
     setLoading(true);
@@ -138,6 +153,14 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         emit workflowRunDetailsReceived(doc.object());
     } else if (requestType == "workflowJobs") {
         emit workflowJobsReceived(doc.object()["jobs"].toArray());
+    } else if (requestType == "workflowArtifacts") {
+        emit workflowArtifactsReceived(doc.object()["artifacts"].toArray());
+    } else if (requestType == "rerunWorkflow") {
+        qDebug() << "[Workflow] Workflow rerun initiated";
+        emit requestError(""); // Success notification
+    } else if (requestType == "cancelWorkflow") {
+        qDebug() << "[Workflow] Workflow cancelled";
+        emit requestError(""); // Success notification
     } else if (requestType == "releases") {
         emit releasesReceived(doc.array());
     } else if (requestType == "issues") {
@@ -163,6 +186,14 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         emit commitsReceived(doc.array());
     } else if (requestType == "commit") {
         emit commitReceived(doc.object());
+    } else if (requestType == "branches") {
+        emit branchesReceived(doc.array());
+    } else if (requestType == "issueComments") {
+        emit issueCommentsReceived(doc.array());
+    } else if (requestType == "pullRequestComments") {
+        emit pullRequestCommentsReceived(doc.array());
+    } else if (requestType == "notifications") {
+        emit notificationsReceived(doc.array());
     }
 }
 
@@ -237,6 +268,60 @@ void GitHubAPI::fetchWorkflowRunJobs(const QString &owner, const QString &repo, 
     qDebug() << "[Workflow] Fetching jobs for run:" << runId;
     qDebug() << "[Workflow] Endpoint:" << endpoint;
     get(endpoint, "workflowJobs");
+}
+
+void GitHubAPI::fetchWorkflowRunArtifacts(const QString &owner, const QString &repo, qint64 runId)
+{
+    qDebug() << "[Workflow] Fetching artifacts for run:" << runId;
+    get(QString("/repos/%1/%2/actions/runs/%3/artifacts").arg(owner, repo).arg(runId), "workflowArtifacts");
+}
+
+void GitHubAPI::downloadWorkflowArtifact(const QString &owner, const QString &repo, qint64 artifactId, const QString &fileName)
+{
+    qDebug() << "[Workflow] Downloading artifact:" << artifactId << fileName;
+    QString endpoint = QString("/repos/%1/%2/actions/artifacts/%3/zip").arg(owner, repo).arg(artifactId);
+
+    setLoading(true);
+    QNetworkRequest req = createRequest(endpoint);
+
+    QNetworkReply *reply = m_networkManager->get(req);
+    reply->setProperty("requestType", "downloadArtifact");
+    reply->setProperty("fileName", fileName);
+
+    connect(reply, &QNetworkReply::downloadProgress, this, &GitHubAPI::onDownloadProgress);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+            QString fileName = reply->property("fileName").toString();
+            QString filePath = downloadsPath + "/" + fileName;
+
+            QFile file(filePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(reply->readAll());
+                file.close();
+                qDebug() << "[Workflow] Artifact downloaded:" << filePath;
+                emit assetDownloadCompleted(filePath);
+            } else {
+                emit requestError("Failed to save artifact: " + fileName);
+            }
+        } else {
+            emit requestError("Artifact download failed: " + reply->errorString());
+        }
+        reply->deleteLater();
+        setLoading(false);
+    });
+}
+
+void GitHubAPI::rerunWorkflow(const QString &owner, const QString &repo, qint64 runId)
+{
+    qDebug() << "[Workflow] Re-running workflow:" << runId;
+    post(QString("/repos/%1/%2/actions/runs/%3/rerun").arg(owner, repo).arg(runId), "rerunWorkflow");
+}
+
+void GitHubAPI::cancelWorkflow(const QString &owner, const QString &repo, qint64 runId)
+{
+    qDebug() << "[Workflow] Cancelling workflow:" << runId;
+    post(QString("/repos/%1/%2/actions/runs/%3/cancel").arg(owner, repo).arg(runId), "cancelWorkflow");
 }
 
 // Releases API
@@ -365,4 +450,31 @@ void GitHubAPI::fetchCommits(const QString &owner, const QString &repo, const QS
 void GitHubAPI::fetchCommit(const QString &owner, const QString &repo, const QString &sha)
 {
     get(QString("/repos/%1/%2/commits/%3").arg(owner, repo, sha), "commit");
+}
+
+// Branches API
+void GitHubAPI::fetchBranches(const QString &owner, const QString &repo)
+{
+    qDebug() << "[Branches] Fetching branches for" << owner << "/" << repo;
+    get(QString("/repos/%1/%2/branches?per_page=100").arg(owner, repo), "branches");
+}
+
+// Comments API
+void GitHubAPI::fetchIssueComments(const QString &owner, const QString &repo, int issueNumber)
+{
+    qDebug() << "[Comments] Fetching issue comments for" << issueNumber;
+    get(QString("/repos/%1/%2/issues/%3/comments").arg(owner, repo).arg(issueNumber), "issueComments");
+}
+
+void GitHubAPI::fetchPullRequestComments(const QString &owner, const QString &repo, int prNumber)
+{
+    qDebug() << "[Comments] Fetching PR comments for" << prNumber;
+    get(QString("/repos/%1/%2/pulls/%3/comments").arg(owner, repo).arg(prNumber), "pullRequestComments");
+}
+
+// Notifications API
+void GitHubAPI::fetchNotifications()
+{
+    qDebug() << "[Notifications] Fetching notifications";
+    get("/notifications?per_page=50", "notifications");
 }
