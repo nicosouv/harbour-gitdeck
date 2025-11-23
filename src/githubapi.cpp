@@ -30,6 +30,7 @@ QNetworkRequest GitHubAPI::createRequest(const QString &endpoint)
 
     request.setRawHeader("Accept", "application/vnd.github+json");
     request.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
     if (!m_settings->accessToken().isEmpty()) {
         request.setRawHeader("Authorization",
@@ -341,6 +342,7 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
     QUrl url(assetUrl);
     QNetworkRequest req(url);
     req.setRawHeader("Accept", "application/octet-stream");
+    req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
     if (!m_settings->accessToken().isEmpty()) {
         req.setRawHeader("Authorization",
