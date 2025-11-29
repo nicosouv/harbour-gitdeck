@@ -316,26 +316,38 @@ Page {
         html = html.replace(/</g, '&lt;')
         html = html.replace(/>/g, '&gt;')
 
-        // Code blocks (inline) - do before other formatting
-        html = html.replace(/`([^`]+)`/g, '<tt>$1</tt>')
-
-        // Bold (do before italic to handle ** before *)
-        html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-        html = html.replace(/__(.+?)__/g, '<b>$1</b>')
-
-        // Italic
-        html = html.replace(/\*(.+?)\*/g, '<i>$1</i>')
-        html = html.replace(/_(.+?)_/g, '<i>$1</i>')
-
-        // Links
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-
-        // Process line by line for headers and lists
+        // Process line by line to handle code blocks and other formatting
         var lines = html.split('\n')
         var result = []
+        var inCodeBlock = false
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i]
+
+            // Code blocks (```)
+            if (line.match(/^```/)) {
+                inCodeBlock = !inCodeBlock
+                continue
+            }
+
+            if (inCodeBlock) {
+                result.push('<tt>' + line + '</tt>')
+                continue
+            }
+
+            // Code blocks (inline) - do before other formatting
+            line = line.replace(/`([^`]+)`/g, '<tt>$1</tt>')
+
+            // Bold (do before italic to handle ** before *)
+            line = line.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+            line = line.replace(/__(.+?)__/g, '<b>$1</b>')
+
+            // Italic
+            line = line.replace(/\*(.+?)\*/g, '<i>$1</i>')
+            line = line.replace(/_(.+?)_/g, '<i>$1</i>')
+
+            // Links
+            line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
             // Headers
             if (line.match(/^### /)) {
