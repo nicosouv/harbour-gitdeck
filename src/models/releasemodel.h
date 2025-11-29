@@ -38,6 +38,7 @@ public:
     Q_INVOKABLE void loadFromJson(const QJsonArray &releases);
     Q_INVOKABLE void clear();
     Q_INVOKABLE QVariantMap get(int index) const;
+    Q_INVOKABLE void removeById(qint64 releaseId);
 
 signals:
     void countChanged();

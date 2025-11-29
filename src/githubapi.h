@@ -41,6 +41,7 @@ public:
 
     // Releases API
     Q_INVOKABLE void fetchReleases(const QString &owner, const QString &repo);
+    Q_INVOKABLE void deleteRelease(const QString &owner, const QString &repo, qint64 releaseId);
     Q_INVOKABLE void downloadReleaseAsset(const QString &assetUrl, const QString &fileName);
 
     // Issues API
@@ -103,6 +104,7 @@ signals:
     void workflowRerun(qint64 runId);
     void workflowCancelled(qint64 runId);
     void releasesReceived(const QJsonArray &releases);
+    void releaseDeleted(qint64 releaseId);
     void assetDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void assetDownloadCompleted(const QString &filePath);
     void issuesReceived(const QJsonArray &issues);

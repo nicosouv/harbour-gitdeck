@@ -9,6 +9,18 @@ ListItem {
     property string repositoryName
     property bool bodyExpanded: false
 
+    menu: ContextMenu {
+        MenuItem {
+            text: "Delete release"
+            visible: isDraft
+            onClicked: {
+                remorse.execute(delegate, "Deleting release", function() {
+                    githubApi.deleteRelease(repositoryOwner, repositoryName, releaseId)
+                })
+            }
+        }
+    }
+
     // Card-like background
     Rectangle {
         anchors {
@@ -114,10 +126,11 @@ ListItem {
 
             Label {
                 width: parent.width
-                text: body
+                text: formatMarkdown(body)
                 color: Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 wrapMode: Text.WordWrap
+                textFormat: Text.StyledText
                 maximumLineCount: bodyExpanded ? 0 : 4
                 elide: bodyExpanded ? Text.ElideNone : Text.ElideRight
             }
@@ -261,5 +274,61 @@ ListItem {
     function formatDate(dateString) {
         var date = new Date(dateString)
         return Qt.formatDate(date, "MMM d, yyyy")
+    }
+
+    function formatMarkdown(markdown) {
+        if (!markdown) return ""
+
+        var html = markdown
+
+        // Escape HTML special chars first
+        html = html.replace(/&/g, '&amp;')
+        html = html.replace(/</g, '&lt;')
+        html = html.replace(/>/g, '&gt;')
+
+        // Code blocks (inline) - do before other formatting
+        html = html.replace(/`([^`]+)`/g, '<tt>$1</tt>')
+
+        // Bold (do before italic to handle ** before *)
+        html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+        html = html.replace(/__(.+?)__/g, '<b>$1</b>')
+
+        // Italic
+        html = html.replace(/\*(.+?)\*/g, '<i>$1</i>')
+        html = html.replace(/_(.+?)_/g, '<i>$1</i>')
+
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+
+        // Process line by line for headers and lists
+        var lines = html.split('\n')
+        var result = []
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i]
+
+            // Headers
+            if (line.match(/^### /)) {
+                line = '<font size="+1"><b>' + line.substring(4) + '</b></font>'
+            } else if (line.match(/^## /)) {
+                line = '<font size="+2"><b>' + line.substring(3) + '</b></font>'
+            } else if (line.match(/^# /)) {
+                line = '<font size="+3"><b>' + line.substring(2) + '</b></font>'
+            }
+            // Lists
+            else if (line.match(/^\* /)) {
+                line = '• ' + line.substring(2)
+            } else if (line.match(/^- /)) {
+                line = '• ' + line.substring(2)
+            }
+            // Numbered lists
+            else if (line.match(/^\d+\. /)) {
+                line = line.replace(/^(\d+)\. /, '$1. ')
+            }
+
+            result.push(line)
+        }
+
+        return result.join('<br>')
     }
 }

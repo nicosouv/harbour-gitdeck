@@ -20,7 +20,7 @@ QVariant ReleaseModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case IdRole:
-        return release["id"].toInt();
+        return release["id"].toVariant().toLongLong();
     case TagNameRole:
         return release["tag_name"].toString();
     case NameRole:
@@ -111,7 +111,7 @@ QVariantMap ReleaseModel::get(int index) const
     QVariantMap map;
     if (index >= 0 && index < m_releases.size()) {
         const QJsonObject &release = m_releases.at(index);
-        map["releaseId"] = release["id"].toInt();
+        map["releaseId"] = release["id"].toVariant().toLongLong();
         map["tagName"] = release["tag_name"].toString();
         map["name"] = release["name"].toString();
         map["body"] = release["body"].toString();
@@ -120,4 +120,17 @@ QVariantMap ReleaseModel::get(int index) const
         map["author"] = release["author"].toObject()["login"].toString();
     }
     return map;
+}
+
+void ReleaseModel::removeById(qint64 releaseId)
+{
+    for (int i = 0; i < m_releases.size(); ++i) {
+        if (m_releases.at(i)["id"].toVariant().toLongLong() == releaseId) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_releases.removeAt(i);
+            endRemoveRows();
+            emit countChanged();
+            return;
+        }
+    }
 }

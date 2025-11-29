@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
                      workflowModel, &WorkflowRunModel::loadFromJson);
     QObject::connect(api, &GitHubAPI::releasesReceived,
                      releaseModel, &ReleaseModel::loadFromJson);
+    QObject::connect(api, &GitHubAPI::releaseDeleted,
+                     releaseModel, &ReleaseModel::removeById);
     QObject::connect(api, &GitHubAPI::issuesReceived,
                      issueModel, &IssueModel::loadFromJson);
     QObject::connect(api, &GitHubAPI::pullRequestsReceived,

@@ -164,6 +164,14 @@ void GitHubAPI::handleResponse(QNetworkReply *reply, const QString &requestType)
         emit requestError(""); // Success notification
     } else if (requestType == "releases") {
         emit releasesReceived(doc.array());
+    } else if (requestType == "deleteRelease") {
+        qDebug() << "[Release] Release deleted successfully";
+        QString endpoint = reply->url().path();
+        QStringList parts = endpoint.split('/');
+        if (parts.size() >= 4) {
+            qint64 releaseId = parts[parts.size() - 1].toLongLong();
+            emit releaseDeleted(releaseId);
+        }
     } else if (requestType == "issues") {
         emit issuesReceived(doc.array());
     } else if (requestType == "issue") {
@@ -327,7 +335,7 @@ void GitHubAPI::downloadWorkflowArtifact(const QString &owner, const QString &re
                     QString filePath = downloadsPath + "/" + fileName;
 
                     QFile file(filePath);
-                    if (file.open(QIODevice::WriteOnly)) {
+                    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                         file.write(redirectReply->readAll());
                         file.close();
                         qDebug() << "[Workflow] Artifact downloaded:" << filePath;
@@ -350,7 +358,7 @@ void GitHubAPI::downloadWorkflowArtifact(const QString &owner, const QString &re
             QString filePath = downloadsPath + "/" + fileName;
 
             QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
+            if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 file.write(reply->readAll());
                 file.close();
                 qDebug() << "[Workflow] Artifact downloaded:" << filePath;
@@ -382,6 +390,12 @@ void GitHubAPI::cancelWorkflow(const QString &owner, const QString &repo, qint64
 void GitHubAPI::fetchReleases(const QString &owner, const QString &repo)
 {
     get(QString("/repos/%1/%2/releases?per_page=30").arg(owner, repo), "releases");
+}
+
+void GitHubAPI::deleteRelease(const QString &owner, const QString &repo, qint64 releaseId)
+{
+    qDebug() << "[Release] Deleting release:" << releaseId;
+    deleteRequest(QString("/repos/%1/%2/releases/%3").arg(owner, repo).arg(releaseId), "deleteRelease");
 }
 
 void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fileName)
@@ -441,7 +455,7 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
                     qDebug() << "[Download] Downloaded:" << data.size() << "bytes";
 
                     QFile file(filePath);
-                    if (file.open(QIODevice::WriteOnly)) {
+                    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                         qint64 written = file.write(data);
                         file.close();
                         qDebug() << "[Download] File saved successfully";
@@ -471,7 +485,7 @@ void GitHubAPI::downloadReleaseAsset(const QString &assetUrl, const QString &fil
             qDebug() << "[Download] Data size:" << data.size() << "bytes";
 
             QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
+            if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 qint64 written = file.write(data);
                 file.close();
                 qDebug() << "[Download] Written:" << written << "bytes";
